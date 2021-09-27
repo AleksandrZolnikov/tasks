@@ -117,13 +117,24 @@
     ansible.builtin.service:
       name: "nginx"
       state: "reloaded"
-# Я если честно не понял вопроса вашего,из данного контекста не совсем понятна история происхождения ключей, но каждый раз ансиблом генерировать ключи это тоже не правильно, потому что тогда, будем их плодить после каждого запуска. Извините если задаю глупые вопросы, ансбли изучаю второй день, и то мельком параллельно с работой.
+      
+# Я если честно не понял вопроса вашего,из данного контекста не совсем понятна история происхождения ключей, но каждый раз ансиблом генерировать ключи это тоже не правильно, потому что тогда, будем их плодить после каждого запуска. Извините если задаю глупые вопросы, ансбли изучаю третий день, и то мельком параллельно с работой.
 А так, проще было использовать модуль ansible.builtin.copy и скопировать сгенерированые ключи просто в папочку root на удалённом хосте. Я просто запутался в формулировки вашего вопроса, и боюсь что этот пункт вообще не правильно сделал.
 
-- name: Generate an OpenSSH keypair with the default values (4096 bits, rsa)
-  community.crypto.openssh_keypair:
-    path: /root/id_ssh_rsa
-- name: Generate an OpenSSH keypair with the default values (4096 bits, rsa)
-  community.crypto.openssh_keypair:
-    path: /root/id_ssh_rsa_1
+- name: Set authorized key in alternate location
+  ansible.posix.authorized_key:
+    user: jon
+    state: present
+    key: "{{ lookup('file', '/home/jon/.ssh/id_rsa_1.pub') }}"
+    path: /root # но они не будут работать.
+    manage_dir: False
+
+ - name: Set authorized key in alternate location
+  ansible.posix.authorized_key:
+    user: petya
+    state: present
+    key: "{{ lookup('file', '/home/petya/.ssh/id_rsa_2.pub') }}"
+    path: /root # но они не будут работать.
+    manage_dir: False   
+
 ```
