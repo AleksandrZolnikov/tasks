@@ -55,3 +55,65 @@
  - настраивает в sysctl параметр fs.files-max в 1204000 и somaxconn в 65535
  - прописывает на этой машинке 2 разных ssh ключа в /root
  - результат в git на github в приватном репозитории
+```
+############
+# PLAYBOOK #
+############
+---
+- hosts: "all"
+  become: true
+  tasks:
+  # NGINX
+  - name: "Install nginx via apt"
+    ansible.builtin.apt:
+      name: "nginx"
+      state: "latest"
+      update_cache: true
+
+  - name: "Delete /var/www/html folder"
+    ansible.builtin.file:
+      path: "/var/www/html"
+      state: "absent"
+
+  - name: "Copy web page index.html"
+    get_url:
+      url: "https://raw.githubusercontent.com/AleksandrZolnikov/tasks/main/index.html?token=ASF2JGUJWKTVXRB7YFHGUSLBKHOBC"
+      dest: "/var/www/index.html"
+      mode: '0644'
+
+ # ZSH
+  - name: "Install ZSH apt"
+    ansible.builtin.apt:
+      name: "zsh"
+      state: "latest"
+      update_cache: true
+
+  # Install wget
+
+  - name: "Install wget apt"
+    ansible.builtin.apt:
+      name: "wget"
+      state: "latest"
+      update_cache: true
+
+
+  - name: "Reload nginx"
+    ansible.builtin.service:
+      name: "nginx"
+      state: "reloaded"
+
+  - name: Set authorized key in alternate location
+    ansible.posix.authorized_key:
+      user: root
+      state: present
+      key: "{{ lookup('file', '/.ssh/id_rsa1.pub') }}"
+      path: /root
+      manage_dir: False
+  - name: Set authorized key in alternate location
+    ansible.posix.authorized_key:
+      user: root
+      state: present
+      key: "{{ lookup('file', '/.ssh/id_rsa2.pub') }}"
+      path: /root
+      manage_dir: False
+```
