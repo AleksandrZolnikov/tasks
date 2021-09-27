@@ -63,6 +63,7 @@
 - hosts: "all"
   become: true
   tasks:
+  
   # NGINX
   - name: "Install nginx via apt"
     ansible.builtin.apt:
@@ -70,17 +71,18 @@
       state: "latest"
       update_cache: true
 
-  - name: "Delete /var/www/html folder"
-    ansible.builtin.file:
-      path: "/var/www/html"
-      state: "absent"
-
   - name: "Copy web page index.html"
     get_url:
       url: "https://raw.githubusercontent.com/AleksandrZolnikov/tasks/main/index.html?token=ASF2JGUJWKTVXRB7YFHGUSLBKHOBC"
       dest: "/var/www/index.html"
       mode: '0644'
-
+      
+  - name: "Copy default"
+    ansible.builtin.copy: 
+      src: "default" # - файл в репозитории, можете посмотреть
+      dest: "/etc/nginx/sites-available/default"  
+      mode: "0644" 
+      
  # ZSH
   - name: "Install ZSH apt"
     ansible.builtin.apt:
@@ -95,25 +97,33 @@
       name: "wget"
       state: "latest"
       update_cache: true
-
+      
+      
+  - name: "Sysctl options"
+    sysctl:
+      reload: yes
+      name: "fs.file-max"
+      value: "1204000"
+      state: present
+      
+ - name: "Sysctl options_1"
+    sysctl:
+      reload: yes
+      name: "net.core.somaxconn"
+      value: "65535"
+      state: present
 
   - name: "Reload nginx"
     ansible.builtin.service:
       name: "nginx"
       state: "reloaded"
+# Я если честно не понял вопроса вашего,из данного контекста не совсем понятна история происхождения ключей, но каждый раз ансиблом генерировать ключи это тоже не правильно, потому что тогда, будем их плодить после каждого запуска. Извините если задаю глупые вопросы, ансбли изучаю второй день, и то мельком параллельно с работой.
+А так, проще было использовать модуль ansible.builtin.copy и скопировать сгенерированые ключи просто в папочку root на удалённом хосте. Я просто запутался в формулировки вашего вопроса, и боюсь что этот пункт вообще не правильно сделал.
 
-  - name: Set authorized key in alternate location
-    ansible.posix.authorized_key:
-      user: root
-      state: present
-      key: "{{ lookup('file', '/.ssh/id_rsa1.pub') }}"
-      path: /root
-      manage_dir: False
-  - name: Set authorized key in alternate location
-    ansible.posix.authorized_key:
-      user: root
-      state: present
-      key: "{{ lookup('file', '/.ssh/id_rsa2.pub') }}"
-      path: /root
-      manage_dir: False
+- name: Generate an OpenSSH keypair with the default values (4096 bits, rsa)
+  community.crypto.openssh_keypair:
+    path: /root/id_ssh_rsa
+- name: Generate an OpenSSH keypair with the default values (4096 bits, rsa)
+  community.crypto.openssh_keypair:
+    path: /root/id_ssh_rsa_1
 ```
