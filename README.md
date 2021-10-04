@@ -18,7 +18,7 @@ kind: Deployment
 metadata:
   name: php-apache
 spec:
-  replicas: 1
+  replicas: 1           
   selector:
     matchLabels:
       app: php-apache
@@ -79,10 +79,10 @@ metadata:
   name: my-service
 spec:
   ports:
-  - port: 80
-    targetPort: 80
+  - port: 80            # На каком порту сервис принимает запрос
+    targetPort: 80      # Порт в контейнере, куда сервис будет форвардить трафик.
   selector:
-    app: php-apache
+    app: php-apache     
   type: ClusterIP
   ```
 
@@ -100,10 +100,10 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: php-apache
-  minReplicas: 1
-  maxReplicas: 4
+  minReplicas: 1         # Минимальное количество подов при скейлинге
+  maxReplicas: 4         # Максимальное количество подов при скейлинге ( Количество взял из ТЗ)
 metrics:
-- type: Resource
+- type: Resource         # Выбрал тип ресурс, и скейлить будем по ЦПУ      
   resource:
     name: cpu
     target:
